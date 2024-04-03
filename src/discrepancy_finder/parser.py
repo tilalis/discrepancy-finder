@@ -22,6 +22,10 @@ class DateParser:
         return None
 
 
+class DiscrepancyParserWarning(UserWarning):
+    pass
+
+
 class Parser:
     def __init__(self):
         pass

@@ -1,5 +1,33 @@
 # discrepancy-finder
 
+# Running the project
+
+## Installation
+
+```bash
+pip install .
+```
+
+## Configuration
+
+You need to create `.env` file in the root of the project with the following content in your working directory:
+
+```dotenv
+DF_DATABASE__URL=some.mongodb.url
+DF_DATABASE__USER=theuser
+DF_DATABASE__PASSWORD=theuserpassword
+DF_DATABASE__NAME=databasename
+```
+
+It is also possible to set the environment variables directly in the shell.
+
+## Running the project
+
+```bash
+# inside your virtual environment
+python3 -m discrepancy_finder <path_to_documents_directory>
+```
+
 # Task 1
 
 ## Preparation
@@ -35,7 +63,7 @@ I choose `pydantic-mongo` over `mongoengine` because:
 
 * pydantic is more pythonic
 * it is a good idea to separate the presentation from data, so that both can be used independently
-* pydantic is more flexible and can be used with other libraries, such as but not limited to FastAPI if at the future
+* pydantic is more flexible and can be used with other libraries, such as but not limited to FastAPI if in the future
   we'll need to provide an API or publish a library for 3rd party developers
 
 ## Defining the data model
@@ -45,16 +73,15 @@ Document model is defined in [document.py](src/discrepancy_finder/models/documen
 Design decisions regarding the data model:
 
 * header is stored as a list of strings
-* Document body is its own model, with its own heade: `list[str]` field and body: `list[Number]` field
+* Document body is its own model, with its own header: `str` field and body: `list[str]` field
 * date_of_creation is stored as a datetime object
-* country_of_creation is stored as a CountryShortName object (from pydatnic-extra-types)
 
 Discrepancy model is defined in [discrepancy.py](src/discrepancy_finder/models/discrepancy.py)
 
 Design decisions regarding the discrepancy model:
 
 * for now, discrepancy_type is defined as a string, but it can be changed to an enum when implementing the logic for
-  Type 2 (I am assuming the for the moment I don't now possible discrepancy types)
+  Task 2 (I am assuming the for the moment I don't know possible discrepancy types)
 * location is a named tuple called DiscrepancyLocation in the format (row, column)
 
 ## Creating configuration
@@ -66,7 +93,7 @@ The settings are defined in [settings.py](src/discrepancy_finder/settings.py)
 
 ## Logging
 
-For logging, I have chosen the `loguru` library, which is a flexible, easy-to-use and zero-configuration logging
+For logging, I have chosen `loguru` library, which is a flexible, easy-to-use and zero-configuration logging
 library.
 
 ## Creating the database
