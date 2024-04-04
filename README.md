@@ -116,3 +116,27 @@ I have created a separate `parse_document` method in [document_parser.py](src/di
 parsing a single document.
 This function is then called in `parse` method which iterates over html files in the specified directory and returns a
 generator of parsed documents.
+
+# Task 2
+
+## Defining the DiscrepancyType
+
+I have defined a class called DiscrepancyType in [discrepancy_types.py](src/discrepancy_finder/discrepancy.py)
+
+It is an Abstract Base Class that defines the interface for the discrepancy types.
+It also inherits from UserString so that it can be used as a string and stored in the database as such.
+
+## Implementing the DocumentValidator
+
+DocumentValidator class is defined in [document_validator.py](src/discrepancy_finder/validator.py)
+
+By design, the DocumentValidator validates against the set of rules, each rule being a subclass of the DiscrepancyType.
+
+In order to not have a big try-except block, I have created a `on_error` decorator that catches the exception and
+controls the return value in case of an exception.
+
+This decorator decorates the `validate` method of the `DocumentValidator` class.
+
+ValidationStatus is an Enum that defines the possible validation statuses.
+The validator module also contains utility classes, mainly used by statical code analysis tools.
+
