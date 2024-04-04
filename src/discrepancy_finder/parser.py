@@ -31,7 +31,14 @@ class Parser:
         pass
 
     @staticmethod
-    def parse_document(file: Path) -> Document:
+    def _parse_row_data(data: str):
+        data = data.strip()
+        if data.endswith('%'):
+            return float(data[:-1]) / 100
+        return float(data)
+
+    @classmethod
+    def parse_document(cls, file: Path) -> Document:
         with open(file, 'r') as f:
             soup = BeautifulSoup(f, 'html.parser')
 
@@ -48,7 +55,7 @@ class Parser:
         body = [
             DocumentRow(
                 header=row.td.text.strip(),
-                body=[td.text.strip() for td in row.find_all('td')[1:]]
+                body=[cls._parse_row_data(td.text) for td in row.find_all('td')[1:]]
             )
             for row in table.tbody.find_all('tr')
         ]
@@ -60,6 +67,7 @@ class Parser:
                 footer
             )
         else:
+            footer = None
             match_result = None
 
         if match_result is not None:
