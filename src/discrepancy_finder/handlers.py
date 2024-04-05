@@ -1,26 +1,27 @@
-from abc import ABC
+from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Any, Iterable
 
 from loguru import logger
 from pymongo.errors import BulkWriteError
 
-from .models.discrepancy import Discrepancy
-from .models.document import Document, DocumentId
-from .models.repositories import DiscrepancyRepository, DocumentRepository
+from .models.base import BaseModelWithObjectId
+from .models.document import DocumentId
+from .models.repositories import AbstractRepositoryWithInsertMany, DocumentRepository
 from .parser import Parser
 from .validator import DiscrepancyFinder
 
 
-class AbstractHandler(ABC):
+class AbstractHandler(metaclass=ABCMeta):
     # https://refactoring.guru/design-patterns/chain-of-responsibility
     def __init__(self):
         self._next_handler = None
 
     def chain(self, handler):
         self._next_handler = handler
-        return handler
+        return self
 
+    @abstractmethod
     def handle(self, request: Any):
         if self._next_handler is not None:
             return self._next_handler.handle(request)
@@ -33,33 +34,32 @@ class DirectoryParsingHandler(AbstractHandler):
         return super().handle(Parser.parse(directory))
 
 
-class DocumentDatabaseHandler(AbstractHandler):
-    def __init__(self, repository: DocumentRepository):
+class DatabaseHandler(AbstractHandler, metaclass=ABCMeta):
+    def __init__(self, repository: AbstractRepositoryWithInsertMany):
         super().__init__()
         self.repository = repository
 
 
-class DocumentsDatabaseInsertHandler(DocumentDatabaseHandler):
-    def handle(self, documents: Iterable[Document]):
+class DatabaseInsertHandler(DatabaseHandler):
+    def handle(self, data: Iterable[BaseModelWithObjectId]):
         try:
-            documents = list(documents)
-            logger.info(f"saving {len(documents)} documents to the database")
-            result = self.repository.insert_many(documents)
+            data = list(data)
+            logger.debug(f"saving {len(data)} items to the database")
+            result = self.repository.insert_many(data)
         except BulkWriteError as bwe:
-            logger.error(f"an error occurred while saving documents: {bwe.details}")
+            logger.error(f"an error occurred while saving data: {bwe.details}")
             result = None
-            documents = []
+            data = []
 
         if result is None or not result.inserted_ids:
-            logger.warning("no documents were inserted")
+            logger.warning("no data was inserted")
+        else:
+            logger.info(f"saved {len(result.inserted_ids)} items")
 
-        return super().handle((
-            document.document_id
-            for document in documents
-        ))
+        return super().handle((data_item.id for data_item in data))
 
 
-class DiscrepancyFinderHandler(DocumentDatabaseHandler):
+class DiscrepancyFinderHandler(DatabaseHandler):
     def __init__(self, repository: DocumentRepository, discrepancy_finder: DiscrepancyFinder):
         super().__init__(repository)
         self.discrepancy_finder = discrepancy_finder
@@ -68,28 +68,6 @@ class DiscrepancyFinderHandler(DocumentDatabaseHandler):
         logger.info("validating documents in the database")
         return super().handle(
             self.discrepancy_finder.find_discrepancies(
-                self.repository.find_by({"document_id": {"$in": list(document_ids)}})
+                self.repository.find_by({"id": {"$in": list(document_ids)}})
             )
         )
-
-
-class DiscrepancyInsertDatabaseHandler(AbstractHandler):
-    def __init__(self, repository: DiscrepancyRepository):
-        super().__init__()
-        self.repository = repository
-
-    def handle(self, discrepancies: Iterable[Discrepancy]):
-        try:
-            discrepancies = list(discrepancies)
-            logger.debug(f"saving {len(discrepancies)} discrepancies to the database")
-            result = self.repository.insert_many(discrepancies)
-        except BulkWriteError as bwe:
-            logger.error(f"an error occurred while saving discrepancies: {bwe.details}")
-            result = None
-
-        if result is None or not result.inserted_ids:
-            logger.warning("no discrepancies were inserted")
-        else:
-            logger.info(f"saved {len(result.inserted_ids)} discrepancies")
-
-        return super().handle(result)
