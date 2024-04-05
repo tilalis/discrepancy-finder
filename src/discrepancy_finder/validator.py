@@ -4,7 +4,7 @@ import itertools
 from abc import ABC, ABCMeta, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Iterable, NamedTuple, Optional, cast
+from typing import Iterable, NamedTuple, Optional
 
 from loguru import logger
 from typing_extensions import NotRequired, TypedDict
@@ -51,11 +51,12 @@ class ValidationStatus(Enum):
 
 
 class ValidationResultInfo(TypedDict):
-    document_id: NotRequired[str]
-    rule: NotRequired[str]
-    rule_parameters: NotRequired[dict]
-    location: NotRequired[str]
-    error: NotRequired[str]
+    document_id: str
+    rule: str
+    rule_parameters: dict
+    location: DiscrepancyLocation
+    error: str
+    status: str
 
 
 class ValidationResult(NamedTuple):
@@ -92,7 +93,9 @@ class DocumentValidator(ABC, metaclass=DocumentValidatorMeta):
         return str(self)
 
     def get_info(
-            self, document: Document,
+            self,
+            document: Document,
+            status: ValidationStatus,
             override_location: Optional[DiscrepancyLocation] = None,
             error: Optional[Exception] = None
     ) -> ValidationResultInfo:
@@ -103,7 +106,8 @@ class DocumentValidator(ABC, metaclass=DocumentValidatorMeta):
             'document_id': document.document_id,
             'rule': str(self),
             'rule_parameters': parameters,
-            'location': location
+            'location': location,
+            'status': status.value
         }
 
         if error is not None:
@@ -120,7 +124,7 @@ class DocumentValidator(ABC, metaclass=DocumentValidatorMeta):
     ) -> ValidationResult:
         return ValidationResult(
             status=status,
-            info=self.get_info(document, override_location, error)
+            info=self.get_info(document, status, override_location, error)
         )
 
     @abstractmethod
