@@ -124,35 +124,42 @@ generator of parsed documents.
 
 # Task 2
 
-## Defining the DiscrepancyType
-
-I have defined a class called DiscrepancyType in [discrepancy.py](src/discrepancy_finder/discrepancy.py)
-
-DiscrepancyType implements the Strategy pattern, as a Strategy interface.
-
-For clearer code, better readability and for making it easier to add new discrepancy types, the discrepancy types by
-design are
-convertible to string, and class names act as their own descriptions.
-
 ## Implementing the DocumentValidator
 
 DocumentValidator class is defined in [validator.py](src/discrepancy_finder/validator.py)
 
-By design, the DocumentValidator validates against the set of rules, each rule being a subclass of the DiscrepancyType.
-DocumentValidator implements Strategy pattern, where each rule is a strategy that can be added to the validator.
+DocumentValidator is an abstract base class that provides default functionality for validators,
+for instance -- `create_result` method, which simplifies result creation
 
-In order to not have a big try-except block, I have created a `on_error` decorator that catches the exception and
+By design, the DocumentValidator subclass should validate against one rule.
+The checks should be implemented in `validate` method.
+DocumentValidator implements Strategy pattern, being a Strategy interface by itself.
+
+In order to not have a big try-except block, I have created a `on_exception` decorator that catches the exception and
 controls the return value in case of an exception.
 
-This decorator decorates the `validate` method of the `DocumentValidator` class.
+This decorator is parametrized and accepts `return_value` parameter which can be a callable.
+If it is a callable, its result is returned on exception.
 
-## Implementing the DiscrepancyFinder
+`validator` module provides `default_on_exception` decorator which is `on_exception`
+that returns ValidationResult.ERROR with other default data returned by DocumentValiadtor.
 
-In order to not break the Single Responsibility Principle, I have created a separate class called `DiscrepancyFinder` in
-[discrepancies.py](src/discrepancy_finder/models/discrepancy.py)
+### Default implementation of `validate` method
 
-This class acts as a facade for the `DocumentValidator` class and contains logic for finding discrepancies in an
-iterable of documents. It also implements Factory Method pattern, where the `create_validator` method is a factory
+In DocumentValidator, `validate` method is abstract,
+but has a default implementation which returns SUCCESS status and all the information about the validator.
+
+All the DocumentValidator subclasses are expected to return its parent call its parent `validate` on success, instead of
+providing the success values by themselves.
+
+It is done intentionally, so that it would be possible to generalize some validation checks, re-use validators
+and build a validators hierarchy if necessary.
+
+## Location of the validation result
+
+To describe the location where validation fails, JSONPath is used
+
+## Implementing DiscrepancyFinder
 
 ## Implementing the logic for Task 2
 

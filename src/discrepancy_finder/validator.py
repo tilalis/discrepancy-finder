@@ -112,6 +112,17 @@ class DocumentValidator(ABC):
 
     @abstractmethod
     def validate(self, document: Document) -> ValidationResult:
+        """
+        This method validates the document
+
+        It is an abstract method of DocumentValidator, it returns a result with VALID status.
+
+        DocumentValidator subclasses are expected to call its parent `validate` method on success instead of providing
+        a success result. It allows to re-use and generalize validator classes.
+
+        :param document:
+        :return: an instance of ValidationResult
+        """
         return self.create_result(ValidationStatus.VALID, document=document)
 
 
