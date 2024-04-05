@@ -82,7 +82,7 @@ Design decisions regarding the discrepancy model:
 
 * for now, discrepancy_type is defined as a string, but it can be changed to an enum when implementing the logic for
   Task 2 (I am assuming the for the moment I don't know possible discrepancy types)
-* location is a string, redefined as `DiscrepancyLocation` by typing.NewType for typechecking purposes
+* location is a string, redefined as `DiscrepancyLocation` TypeAlias for typechecking purposes
 
 ## Creating configuration
 
