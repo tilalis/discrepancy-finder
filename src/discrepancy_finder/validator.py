@@ -133,6 +133,12 @@ class DiscrepancyFinder:
 
                 if result.status == ValidationStatus.ERROR:
                     logger.error(f'error validating document {document.document_id}: {result.info["error"]}')
+                    yield Discrepancy(
+                        document_id=document.document_id,
+                        discrepancy_id=f'{document.document_id}error',
+                        discrepancy_type=DiscrepancyTypeDescription('Error'),
+                        details=result.info
+                    )
                     continue
 
                 discrepancy_description, rule_name = result.info['rule_description'], result.info['rule_name']
