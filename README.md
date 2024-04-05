@@ -82,7 +82,7 @@ Design decisions regarding the discrepancy model:
 
 * for now, discrepancy_type is defined as a string, but it can be changed to an enum when implementing the logic for
   Task 2 (I am assuming the for the moment I don't know possible discrepancy types)
-* location is a named tuple called DiscrepancyLocation in the format (row, column)
+* location is a string, redefined as `DiscrepancyLocation` by typing.NewType for typechecking purposes
 
 ## Creating configuration
 
@@ -99,7 +99,12 @@ library.
 ## Creating the database
 
 I have created a database called `discrepancy_finder` and two collections called `documents` and `discrepancies`.
-Both collections have text indexes on the `document_id` and `discrepancy_id` fields.
+Both collections have unique text indexes on the `document_id` and `discrepancy_id` fields.
+
+```mongosh
+db.documents.createIndex({'document_id': 'text'}, {unique: true})
+db.discrepancies.createIndex({'discrepancy_id': 'text'}, {unique: true})
+```
 
 I have also defined a `DocumentRepository` and `DiscrepancyRepository` classes
 in [repositories.py](src/discrepancy_finder/models/repositories.py)
@@ -121,22 +126,61 @@ generator of parsed documents.
 
 ## Defining the DiscrepancyType
 
-I have defined a class called DiscrepancyType in [discrepancy_types.py](src/discrepancy_finder/discrepancy.py)
+I have defined a class called DiscrepancyType in [discrepancy.py](src/discrepancy_finder/discrepancy.py)
 
-It is an Abstract Base Class that defines the interface for the discrepancy types.
-It also inherits from UserString so that it can be used as a string and stored in the database as such.
+DiscrepancyType implements the Strategy pattern, as a Strategy interface.
+
+For clearer code, better readability and for making it easier to add new discrepancy types, the discrepancy types by
+design are
+convertible to string, and class names act as their own descriptions.
 
 ## Implementing the DocumentValidator
 
-DocumentValidator class is defined in [document_validator.py](src/discrepancy_finder/validator.py)
+DocumentValidator class is defined in [validator.py](src/discrepancy_finder/validator.py)
 
 By design, the DocumentValidator validates against the set of rules, each rule being a subclass of the DiscrepancyType.
+DocumentValidator implements Strategy pattern, where each rule is a strategy that can be added to the validator.
 
 In order to not have a big try-except block, I have created a `on_error` decorator that catches the exception and
 controls the return value in case of an exception.
 
 This decorator decorates the `validate` method of the `DocumentValidator` class.
 
-ValidationStatus is an Enum that defines the possible validation statuses.
-The validator module also contains utility classes, mainly used by statical code analysis tools.
+## Implementing the DiscrepancyFinder
+
+In order to not break the Single Responsibility Principle, I have created a separate class called `DiscrepancyFinder` in
+[discrepancies.py](src/discrepancy_finder/models/discrepancy.py)
+
+This class acts as a facade for the `DocumentValidator` class and contains logic for finding discrepancies in an
+iterable of documents. It also implements Factory Method pattern, where the `create_validator` method is a factory
+
+## Implementing the logic for Task 2
+
+In order to simplify things, the logic implementation in Task 1 was not implemented using
+design patterns. It was a `main()` method with straightforward control flow.
+
+In Task 2, I have implemented the logic using Chain of Responsibility pattern, where each class is responsible for
+a single action within the process parsing the documents and finding discrepancies.
+
+_Initially_ the classes were:
+
+* DirectoryParsingHandler
+* DiscrepancyFinderHandler (which is an adapter for DiscrepancyFinder)
+* SaveDocumentsHandler
+* SaveDiscrepanciesHandler
+
+After initial implementation I have noticed that SaveDocumentsHandler and SaveDiscrepanciesHandler are implementing
+the same logic, so I have merged them into a single class called DatabaseInsertHandler.
+
+## Configuration notice for Task 2
+
+In order to simplify things, I have not added configuration for DiscrepancyType and it's parameters.
+
+However, it would not be hard to inherit the DiscrepancyType class from pydantic's BaseModel and by this
+make it possible to easily configure discrepancies via environment variables or configuration files.
+
+# Tests
+
+Per my understanding, the tests are beyond the scope of this assignment
+
 
