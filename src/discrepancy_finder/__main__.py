@@ -10,14 +10,14 @@ from .handlers import (
     DirectoryParsingHandler,
     DiscrepancyFinderHandler,
 )
-from .models.discrepancy import (
-    DateIsTooFarInTheFutureOrMissing,
-    FirstRowSumIsHigherThanPermitted,
-    TitleIsShorterThanPermittedOrMissing,
-)
 from .models.repositories import RepositoryFactory
 from .settings import Settings
-from .validator import DiscrepancyFinder
+from .validator import (
+    DateIsTooFarInTheFutureOrMissing,
+    DiscrepancyFinder,
+    FirstRowSumIsGreaterThanPermitted,
+    TitleIsShorterThanPermittedOrMissing,
+)
 
 logger = logger.patch(lambda record: record.update(name='discrepancy_finder'))
 settings = Settings()
@@ -37,7 +37,7 @@ def main():
     discrepancy_finder = DiscrepancyFinder(
         TitleIsShorterThanPermittedOrMissing(min_length=2),
         DateIsTooFarInTheFutureOrMissing(max_date=datetime(2023, 1, 1)),
-        FirstRowSumIsHigherThanPermitted(max_sum=5220),
+        FirstRowSumIsGreaterThanPermitted(max_sum=5220),
     )
 
     try:
