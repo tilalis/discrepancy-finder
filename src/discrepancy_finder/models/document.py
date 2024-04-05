@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import NewType, Optional
 
-from pydantic import BaseModel
-from pydantic_mongo import ObjectIdField
+from .base import BaseModel, BaseModelWithObjectId
 
 DocumentId = NewType('DocumentId', str)
 
@@ -12,8 +11,7 @@ class DocumentRow(BaseModel):
     body: list[float]
 
 
-class Document(BaseModel):
-    id: ObjectIdField = None
+class Document(BaseModelWithObjectId):
     document_id: DocumentId
     title: Optional[str]
     header: list[str]

@@ -2,9 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import NewType, Optional
 
-from pydantic import BaseModel
-from pydantic_mongo import ObjectIdField
-
+from .base import BaseModelWithObjectId
 from .document import Document
 
 DiscrepancyLocation = NewType('DiscrepancyLocation', str)
@@ -12,8 +10,7 @@ DiscrepancyTypeDescription = NewType('DiscrepancyTypeDescription', str)
 DiscrepancyId = NewType('DiscrepancyId', str)
 
 
-class Discrepancy(BaseModel):
-    id: ObjectIdField = None
+class Discrepancy(BaseModelWithObjectId):
     discrepancy_id: DiscrepancyId
     document_id: str
     discrepancy_type: DiscrepancyTypeDescription
