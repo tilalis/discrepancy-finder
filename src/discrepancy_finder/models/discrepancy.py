@@ -22,7 +22,7 @@ class DiscrepancyType(ABC):
     # https://refactoring.guru/design-patterns/template-method
     # also https://refactoring.guru/design-patterns/strategy, as a Strategy interface
     """
-    This class implements __str__ so that it would be easily converted to a string stored in the database.
+    This class implements __str__ so that it can be easily converted to a string to be stored in the database.
     The string representation of this class is the name of the class.
     """
 
