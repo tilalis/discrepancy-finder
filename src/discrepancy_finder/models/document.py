@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import NewType, Optional
+from typing import TypeAlias, Optional
 
 from .base import BaseModel, BaseModelWithObjectId
 
-DocumentId = NewType('DocumentId', str)
+DocumentId: TypeAlias = str
 
 
 class DocumentRow(BaseModel):

@@ -1,10 +1,10 @@
-from typing import NewType
+from typing import TypeAlias
 
 from .base import BaseModelWithObjectId
 
-DiscrepancyLocation = NewType('DiscrepancyLocation', str)
-DiscrepancyTypeDescription = NewType('DiscrepancyTypeDescription', str)
-DiscrepancyId = NewType('DiscrepancyId', str)
+DiscrepancyLocation: TypeAlias = str
+DiscrepancyTypeDescription: TypeAlias = str
+DiscrepancyId: TypeAlias = str
 
 
 class Discrepancy(BaseModelWithObjectId):

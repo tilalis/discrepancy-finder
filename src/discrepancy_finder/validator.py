@@ -97,14 +97,13 @@ class DocumentValidator(ABC, metaclass=DocumentValidatorMeta):
             error: Optional[Exception] = None
     ) -> ValidationResultInfo:
         parameters = vars(self)
+        location: DiscrepancyLocation = self.location if override_location is None else override_location
 
         result = {
             'document_id': document.document_id,
             'rule': str(self),
             'rule_parameters': parameters,
-            'location': (
-                str(self.location if override_location is None else cast(override_location, DiscrepancyLocation))
-            )
+            'location': location
         }
 
         if error is not None:
@@ -152,7 +151,7 @@ default_on_exception = on_exception(
 
 
 class TitleIsShorterThanPermittedOrMissing(DocumentValidator):
-    location = DiscrepancyLocation("$.title"),
+    location = DiscrepancyLocation("$.title")
 
     def __init__(self, min_length: int):
         self.min_length = min_length
@@ -178,7 +177,7 @@ class TitleIsShorterThanPermittedOrMissing(DocumentValidator):
 
 
 class DateIsTooFarInTheFutureOrMissing(DocumentValidator):
-    location = DiscrepancyLocation("$.date_of_creation"),
+    location = DiscrepancyLocation("$.date_of_creation")
 
     def __init__(self, max_date: datetime):
         self.max_date = max_date
@@ -264,12 +263,13 @@ class DiscrepancyFinder:
                 continue
 
             rule_name = result.info['rule']
+            location = result.info['location']
             logger.debug(f'{validator}: found discrepancy for document {document.document_id}')
 
             yield Discrepancy(
                 document_id=document.document_id,
                 discrepancy_id=f'{document.document_id}{rule_name}',
                 discrepancy_type=DiscrepancyTypeDescription(rule_name),
-                location=result.info.get('location'),
+                location=location,
                 details=result.info
             )
