@@ -1,6 +1,7 @@
 import functools
+import inspect
 import itertools
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Iterable, NamedTuple, Optional, cast
@@ -62,7 +63,20 @@ class ValidationResult(NamedTuple):
     info: ValidationResultInfo
 
 
-class DocumentValidator(ABC):
+class DocumentValidatorMeta(ABCMeta):
+    def __new__(mcs, name, bases, attrs):
+        cls = super().__new__(mcs, name, bases, attrs)
+
+        if inspect.isabstract(cls):
+            return cls
+
+        if "location" not in attrs:
+            raise AttributeError(f"{cls.__name__} should have `location` class-level attribute")
+
+        return cls
+
+
+class DocumentValidator(ABC, metaclass=DocumentValidatorMeta):
     location: DiscrepancyLocation
     # also https://refactoring.guru/design-patterns/strategy, as a Strategy interface
     """
